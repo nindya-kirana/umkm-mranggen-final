@@ -5,6 +5,7 @@ import HeroBanner from "./components/HeroBanner";
 import AboutSection from "./components/AboutSection";
 import FeaturedUMKM from "./components/FeaturedUMKM";
 import { getFeaturedUMKM } from "@/services/umkm";
+export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const umkms = await getFeaturedUMKM(3);
