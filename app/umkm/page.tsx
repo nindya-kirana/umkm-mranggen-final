@@ -1,12 +1,41 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
 import SearchSection from "../components/SearchSection";
 import UMKMCard from "../components/UMKMCard";
-import { umkmData } from "../data/umkm";
+
+import { getUMKM } from "@/services/umkm";
+import { getCategories } from "@/services/category";
+
+import { UMKM } from "@/types/umkm";
+import { Category } from "@/types/category";
 
 export default function UMKMPage() {
+  const [umkmData, setUMKM] = useState<UMKM[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const [umkm, kategori] = await Promise.all([
+          getUMKM(),
+          getCategories(),
+        ]);
+
+        setUMKM(umkm);
+        setCategories(kategori);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    load();
+  }, []);
 
   const filteredUMKM = useMemo(() => {
     if (!search.trim()) {
@@ -15,82 +44,173 @@ export default function UMKMPage() {
 
     const keyword = search.toLowerCase();
 
-    return umkmData.filter((umkm) => {
-      return (
-        umkm.nama.toLowerCase().includes(keyword) ||
-        umkm.kategori.toLowerCase().includes(keyword) ||
-        umkm.lokasi.toLowerCase().includes(keyword) ||
-        umkm.deskripsi.toLowerCase().includes(keyword)
-      );
-    });
-  }, [search]);
+    return umkmData.filter(
+      (item) =>
+        item.nama.toLowerCase().includes(keyword) ||
+        item.kategori.toLowerCase().includes(keyword) ||
+        item.alamat.toLowerCase().includes(keyword) ||
+        item.deskripsi.toLowerCase().includes(keyword)
+    );
+  }, [search, umkmData]);
 
-  // Fungsi untuk mencegah form melakukan reload halaman
-  const handleSearch = (
-    event: React.FormEvent<HTMLFormElement>
-  ) => {
-    event.preventDefault();
-  };
+  function handleSearch(e: React.FormEvent) {
+    e.preventDefault();
+  }
+
+  if (loading) {
+    return (
+      <main className="flex min-h-screen items-center justify-center">
+        Loading...
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-[#F7F5F2]">
 
-      {/* Hero Search */}
+      {/* =========================
+          SEARCH
+      ========================== */}
+
       <SearchSection
         search={search}
         setSearch={setSearch}
         handleSearch={handleSearch}
+        categories={categories}
       />
 
-      {/* Daftar UMKM */}
-      <section
-        id="umkm"
-        className="bg-[#F7F5F2] px-6 py-24 md:px-12 lg:px-20"
-      >
-        <div className="mx-auto max-w-7xl">
+      {/* =========================
+          KATALOG
+      ========================== */}
 
-          {/* Header */}
-          <div className="mb-10">
-            <p className="text-sm font-bold tracking-[0.3em] text-[#8A6A4A]">
+      <section
+        className="
+          bg-[#F7F5F2]
+          px-4
+          py-12
+
+          sm:px-6
+          sm:py-16
+
+          md:px-12
+          md:py-20
+
+          lg:px-20
+          lg:py-24
+        "
+      >
+
+        <div className="mx-auto w-full max-w-7xl">
+
+          {/* =========================
+              HEADER
+          ========================== */}
+
+          <div className="mb-8 sm:mb-10">
+
+            <p
+              className="
+                text-[10px]
+                font-bold
+                tracking-[0.25em]
+                text-[#8A6A4A]
+
+                sm:text-xs
+                sm:tracking-[0.3em]
+
+                md:text-sm
+              "
+            >
               KATALOG UMKM
             </p>
 
-            <h1 className="mt-3 text-4xl font-black text-[#2D2926] md:text-5xl">
+            <h1
+              className="
+                mt-2
+                text-3xl
+                font-black
+                leading-tight
+                text-[#2D2926]
+
+                sm:mt-3
+                sm:text-4xl
+
+                md:text-5xl
+              "
+            >
               UMKM Desa Mranggen
             </h1>
 
-            <p className="mt-4 text-gray-500">
+            <p
+              className="
+                mt-2
+                text-sm
+                text-gray-500
+
+                sm:mt-4
+                sm:text-base
+              "
+            >
               Menampilkan {filteredUMKM.length} UMKM
             </p>
+
           </div>
 
-          {/* Hasil Pencarian */}
+          {/* =========================
+              EMPTY STATE
+          ========================== */}
+
           {filteredUMKM.length === 0 ? (
-            <div className="rounded-3xl bg-white p-12 text-center shadow-sm">
-              <div className="text-5xl">
-                🔍
-              </div>
 
-              <h2 className="mt-5 text-2xl font-black text-[#2D2926]">
-                UMKM tidak ditemukan
-              </h2>
+            <div
+              className="
+                rounded-2xl
+                bg-white
+                p-8
+                text-center
 
-              <p className="mt-3 text-gray-500">
-                Coba gunakan kata kunci lain untuk mencari UMKM.
-              </p>
+                sm:rounded-3xl
+                sm:p-12
+              "
+            >
+              Tidak ada UMKM ditemukan.
             </div>
+
           ) : (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {filteredUMKM.map((umkm) => (
+
+            /* =========================
+               GRID KATALOG
+            ========================== */
+
+            <div
+              className="
+                grid
+
+                grid-cols-2
+                gap-3
+
+                sm:gap-4
+
+                lg:grid-cols-3
+                lg:gap-8
+              "
+            >
+
+              {filteredUMKM.map((item) => (
+
                 <UMKMCard
-                  key={umkm.id}
-                  umkm={umkm}
+                  key={item.id}
+                  umkm={item}
                 />
+
               ))}
+
             </div>
+
           )}
 
         </div>
+
       </section>
 
     </main>

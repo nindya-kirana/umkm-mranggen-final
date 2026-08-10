@@ -4,7 +4,7 @@ import Image from "next/image";
 
 import { motion } from "framer-motion";
 
-import { UMKM } from "@/lib/types";
+import { UMKM } from "@/types/umkm";
 
 interface Props{
 
@@ -69,12 +69,6 @@ UMKM MRANGGEN
 </h1>
 
 <div className="mt-4 flex gap-6">
-
-<span>
-
-⭐ {umkm.rating}
-
-</span>
 
 <span>
 

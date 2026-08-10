@@ -1,77 +1,128 @@
 "use client";
 
-import { motion } from "framer-motion";
 import Link from "next/link";
+import { useRef, useState } from "react";
 
-interface UMKM {
-  id: string;
-  nama: string;
-  kategori: string;
-  deskripsi: string;
-  foto: string;
-  lokasi: string;
+import { UMKM } from "@/types/umkm";
+
+interface Props {
+  umkms: UMKM[];
 }
 
-const dummyUMKM: UMKM[] = [
-  {
-    id: "1",
-    nama: "Warung Makan Bu Siti",
-    kategori: "Makanan",
-    deskripsi:
-      "Menyediakan berbagai makanan rumahan dengan cita rasa khas lokal.",
-    foto: "/umkm/warung-1.jpg",
-    lokasi: "Desa Mranggen",
-  },
-  {
-    id: "2",
-    nama: "Dapur Mranggen",
-    kategori: "Makanan",
-    deskripsi:
-      "Pilihan makanan lezat yang dibuat dengan bahan-bahan berkualitas.",
-    foto: "/umkm/warung-2.jpg",
-    lokasi: "Desa Mranggen",
-  },
-  {
-    id: "3",
-    nama: "Kuliner Lokal Mranggen",
-    kategori: "Makanan",
-    deskripsi:
-      "Nikmati beragam hidangan khas dari pelaku UMKM lokal.",
-    foto: "/umkm/warung-3.jpg",
-    lokasi: "Desa Mranggen",
-  },
-];
+export default function FeaturedUMKM({
+  umkms,
+}: Props) {
+  const [activeIndex, setActiveIndex] = useState(0);
 
-export default function FeaturedUMKM() {
+  const sliderRef =
+    useRef<HTMLDivElement>(null);
+
+  /*
+  |--------------------------------------------------------------------------
+  | DETEKSI SLIDE AKTIF
+  |--------------------------------------------------------------------------
+  */
+
+  const handleScroll = () => {
+    const slider = sliderRef.current;
+
+    if (!slider) return;
+
+    const cards = slider.children;
+
+    if (!cards.length) return;
+
+    const scrollLeft = slider.scrollLeft;
+
+    const cardWidth =
+      (cards[0] as HTMLElement).clientWidth;
+
+    const gap = 16;
+
+    const index = Math.round(
+      scrollLeft / (cardWidth + gap)
+    );
+
+    setActiveIndex(
+      Math.min(
+        index,
+        Math.max(umkms.length - 1, 0)
+      )
+    );
+  };
+
+  /*
+  |--------------------------------------------------------------------------
+  | PINDAH SLIDE
+  |--------------------------------------------------------------------------
+  */
+
+  const goToSlide = (index: number) => {
+    const slider = sliderRef.current;
+
+    if (!slider) return;
+
+    const card =
+      slider.children[index] as HTMLElement;
+
+    if (!card) return;
+
+    slider.scrollTo({
+      left: card.offsetLeft,
+      behavior: "smooth",
+    });
+
+    setActiveIndex(index);
+  };
+
   return (
-    <section className="overflow-hidden bg-white px-6 py-24 md:px-12 lg:px-20">
-      <div className="mx-auto max-w-7xl">
+    <section className="bg-[#D9C7B8] py-20 md:py-24">
 
-        {/* Header */}
-        <div className="flex flex-col justify-between gap-8 md:flex-row md:items-end">
+      <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-10">
 
-          <motion.div
-            initial={{
-              opacity: 0,
-              x: -60,
-            }}
-            whileInView={{
-              opacity: 1,
-              x: 0,
-            }}
-            viewport={{
-              once: true,
-              amount: 0.3,
-            }}
-            transition={{
-              duration: 0.8,
-            }}
-          >
-            <p className="text-sm font-black tracking-[0.25em] text-[#8A6A4A]">
+        {/* =====================================================
+            HEADER
+        ====================================================== */}
+
+        <div
+          className="
+            mb-9
+            flex
+            flex-col
+            justify-between
+            gap-6
+
+            md:mb-9
+            md:flex-row
+            md:items-end
+          "
+        >
+
+          <div>
+
+            <p
+              className="
+                text-sm
+                font-black
+                tracking-[0.25em]
+                text-[#8A6A4A]
+              "
+            >
               EXPLORE LOCAL BUSINESSES
             </p>
 
-            <h2 className="mt-4 max-w-2xl text-5xl font-black leading-[0.95] tracking-tight text-[#2D2926] md:text-7xl">
+            <h2
+              className="
+                mt-4
+                text-4xl
+                font-black
+                leading-[0.95]
+                tracking-tight
+                text-[#2D2926]
+
+                md:text-7xl
+              "
+            >
               Temukan
               <br />
 
@@ -79,172 +130,471 @@ export default function FeaturedUMKM() {
                 UMKM Mranggen
               </span>
             </h2>
-          </motion.div>
 
-          <motion.p
-            initial={{
-              opacity: 0,
-              y: 30,
-            }}
-            whileInView={{
-              opacity: 1,
-              y: 0,
-            }}
-            viewport={{
-              once: true,
-            }}
-            transition={{
-              duration: 0.8,
-              delay: 0.2,
-            }}
-            className="max-w-md leading-7 text-gray-500"
+          </div>
+
+          <p
+            className="
+              max-w-md
+              text-base
+              leading-7
+              text-gray-600
+
+              md:text-lg
+            "
           >
-            Temukan berbagai usaha dan produk lokal
-            dari masyarakat Desa Mranggen.
-          </motion.p>
+            Temukan berbagai UMKM lokal yang menjadi
+            bagian dari potensi ekonomi Desa Mranggen.
+            Temukan informasi usaha dan produk unggulan
+            yang siap memenuhi kebutuhan Anda.
+          </p>
 
         </div>
 
-        {/* Category Filter */}
-        <motion.div
-          initial={{
-            opacity: 0,
-            y: 30,
-          }}
-          whileInView={{
-            opacity: 1,
-            y: 0,
-          }}
-          viewport={{
-            once: true,
-          }}
-          transition={{
-            duration: 0.6,
-            delay: 0.3,
-          }}
-          className="mt-12 flex gap-3 overflow-x-auto pb-2"
-        >
-          <button className="whitespace-nowrap rounded-full bg-[#2D2926] px-6 py-3 text-sm font-bold text-white">
-            Semua UMKM
-          </button>
 
-          <button className="whitespace-nowrap rounded-full border border-gray-200 px-6 py-3 text-sm font-bold text-gray-600 transition hover:border-[#8A6A4A] hover:text-[#8A6A4A]">
-            Makanan
-          </button>
+        {/* =====================================================
+            MOBILE
+        ====================================================== */}
 
-          <button className="whitespace-nowrap rounded-full border border-gray-200 px-6 py-3 text-sm font-bold text-gray-600 transition hover:border-[#8A6A4A] hover:text-[#8A6A4A]">
-            Minuman
-          </button>
-        </motion.div>
+        <div className="md:hidden">
 
-        {/* UMKM Cards */}
-        <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {dummyUMKM.map((umkm, index) => (
-            <UMKMCard
-              key={umkm.id}
-              umkm={umkm}
-              index={index}
-            />
-          ))}
+          {umkms.length === 0 ? (
+
+            <div
+              className="
+                rounded-[2rem]
+                bg-white
+                p-10
+                text-center
+              "
+            >
+              Belum ada UMKM.
+            </div>
+
+          ) : (
+
+            <>
+
+              <div
+                ref={sliderRef}
+                onScroll={handleScroll}
+                className="
+                  flex
+                  gap-4
+                  overflow-x-auto
+                  snap-x
+                  snap-mandatory
+                  scroll-smooth
+                  overscroll-x-contain
+                  px-1
+                  pb-2
+
+                  [&::-webkit-scrollbar]:hidden
+                  [-ms-overflow-style:none]
+                  [scrollbar-width:none]
+                "
+              >
+
+                {umkms.map((umkm) => (
+
+                  <Link
+                    key={umkm.id}
+                    href={`/umkm/${umkm.id}`}
+                    className="
+                      group
+                      relative
+                      block
+                      w-[calc(100vw-4rem)]
+                      min-w-[calc(100vw-4rem)]
+                      snap-start
+                      overflow-hidden
+                      rounded-[2rem]
+                      bg-white
+                      shadow-xl
+                    "
+                  >
+
+                    <div
+                      className="
+                        relative
+                        h-[430px]
+                        w-full
+                        overflow-hidden
+                      "
+                    >
+
+                      <img
+                        src={
+                          umkm.banner ||
+                          "https://placehold.co/800x1000?text=UMKM"
+                        }
+                        alt={umkm.nama}
+                        className="
+                          h-full
+                          w-full
+                          object-cover
+                          transition
+                          duration-500
+                          group-hover:scale-105
+                        "
+                      />
+
+                      <div
+                        className="
+                          absolute
+                          inset-0
+                          bg-gradient-to-t
+                          from-black/75
+                          via-black/10
+                          to-transparent
+                        "
+                      />
+
+                      {/* CATEGORY */}
+
+                      <div
+                        className="
+                          absolute
+                          left-5
+                          top-5
+                        "
+                      >
+
+                        <span
+                          className="
+                            rounded-full
+                            bg-white
+                            px-4
+                            py-2
+                            text-xs
+                            font-bold
+                            text-[#2D2926]
+                            shadow-lg
+                          "
+                        >
+                          {umkm.kategori}
+                        </span>
+
+                      </div>
+
+
+                      {/* CONTENT */}
+
+                      <div
+                        className="
+                          absolute
+                          bottom-0
+                          left-0
+                          right-0
+                          p-6
+                          text-white
+                        "
+                      >
+
+                        <h3
+                          className="
+                            text-2xl
+                            font-black
+                          "
+                        >
+                          {umkm.nama}
+                        </h3>
+
+                        <p
+                          className="
+                            mt-2
+                            line-clamp-2
+                            text-sm
+                            leading-6
+                            text-white/80
+                          "
+                        >
+                          {umkm.deskripsi}
+                        </p>
+
+                        <p
+                          className="
+                            mt-3
+                            text-sm
+                            font-medium
+                            text-white/90
+                          "
+                        >
+                          📍 {umkm.alamat}
+                        </p>
+
+                        <div
+                          className="
+                            mt-5
+                            inline-flex
+                            rounded-full
+                            bg-white
+                            px-5
+                            py-3
+                            text-sm
+                            font-bold
+                            text-[#2D2926]
+                          "
+                        >
+                          Lihat Detail →
+                        </div>
+
+                      </div>
+
+                    </div>
+
+                  </Link>
+
+                ))}
+
+              </div>
+
+
+              {/* DOT */}
+
+              <div
+                className="
+                  mt-6
+                  flex
+                  justify-center
+                  gap-2
+                "
+              >
+
+                {umkms.map((_, index) => (
+
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() =>
+                      goToSlide(index)
+                    }
+                    aria-label={`Ke UMKM ${index + 1}`}
+                    className={`
+                      h-2.5
+                      rounded-full
+                      transition-all
+                      duration-300
+
+                      ${
+                        activeIndex === index
+                          ? "w-8 bg-[#2D2926]"
+                          : "w-2.5 bg-[#8A6A4A]/40"
+                      }
+                    `}
+                  />
+
+                ))}
+
+              </div>
+
+            </>
+
+          )}
+
         </div>
 
-        {/* CTA */}
-        <motion.div
-          initial={{
-            opacity: 0,
-            y: 30,
-          }}
-          whileInView={{
-            opacity: 1,
-            y: 0,
-          }}
-          viewport={{
-            once: true,
-          }}
-          transition={{
-            duration: 0.8,
-          }}
-          className="mt-12 text-center"
+
+        {/* =====================================================
+            DESKTOP
+        ====================================================== */}
+
+        <div
+          className="
+            hidden
+            gap-6
+
+            md:grid
+            md:grid-cols-2
+
+            lg:grid-cols-3
+          "
         >
+
+          {umkms.length === 0 ? (
+
+            <div
+              className="
+                col-span-full
+                rounded-[2rem]
+                bg-white
+                p-10
+                text-center
+              "
+            >
+              Belum ada UMKM.
+            </div>
+
+          ) : (
+
+            umkms.map((umkm) => (
+
+              <Link
+                key={umkm.id}
+                href={`/umkm/${umkm.id}`}
+                className="
+                  group
+                  overflow-hidden
+                  rounded-[2rem]
+                  bg-white
+                  shadow-sm
+                  transition
+                  duration-300
+                  hover:-translate-y-2
+                  hover:shadow-xl
+                "
+              >
+
+                <div
+                  className="
+                    relative
+                    h-[430px]
+                    overflow-hidden
+                  "
+                >
+
+                  <img
+                    src={
+                      umkm.banner ||
+                      "https://placehold.co/800x600?text=UMKM"
+                    }
+                    alt={umkm.nama}
+                    className="
+                      h-full
+                      w-full
+                      object-cover
+                      transition
+                      duration-500
+                      group-hover:scale-110
+                    "
+                  />
+
+                  <div
+                    className="
+                      absolute
+                      inset-0
+                      bg-gradient-to-t
+                      from-black/70
+                      via-transparent
+                      to-transparent
+                    "
+                  />
+
+                  <div
+                    className="
+                      absolute
+                      left-5
+                      top-5
+                    "
+                  >
+
+                    <span
+                      className="
+                        rounded-full
+                        bg-white/95
+                        px-4
+                        py-2
+                        text-xs
+                        font-bold
+                        text-[#2D2926]
+                        shadow-lg
+                      "
+                    >
+                      {umkm.kategori}
+                    </span>
+
+                  </div>
+
+                  <div
+                    className="
+                      absolute
+                      bottom-0
+                      left-0
+                      right-0
+                      p-6
+                      text-white
+                    "
+                  >
+
+                    <h3
+                      className="
+                        text-2xl
+                        font-black
+                      "
+                    >
+                      {umkm.nama}
+                    </h3>
+
+                    <p
+                      className="
+                        mt-3
+                        line-clamp-2
+                        text-sm
+                        leading-6
+                        text-white/80
+                      "
+                    >
+                      {umkm.deskripsi}
+                    </p>
+
+                    <p
+                      className="
+                        mt-4
+                        text-sm
+                        font-semibold
+                        text-white/90
+                      "
+                    >
+                      📍 {umkm.alamat}
+                    </p>
+
+                  </div>
+
+                </div>
+
+              </Link>
+
+            ))
+
+          )}
+
+        </div>
+
+
+        {/* =====================================================
+            LIHAT SEMUA
+        ====================================================== */}
+
+        <div
+          className="
+            mt-10
+            text-center
+
+            md:mt-12
+          "
+        >
+
           <Link
             href="/umkm"
-            className="inline-flex items-center gap-3 rounded-full bg-[#2D2926] px-7 py-4 font-bold text-white transition hover:bg-[#8A6A4A]"
+            className="
+              inline-flex
+              rounded-full
+              bg-[#2D2926]
+              px-8
+              py-4
+              font-bold
+              text-white
+              transition
+              hover:bg-[#433B35]
+            "
           >
             Lihat Semua UMKM
-            <span>↗</span>
           </Link>
-        </motion.div>
+
+        </div>
 
       </div>
+
     </section>
-  );
-}
-
-function UMKMCard({
-  umkm,
-  index,
-}: {
-  umkm: UMKM;
-  index: number;
-}) {
-  return (
-    <motion.div
-      initial={{
-        opacity: 0,
-        y: 60,
-      }}
-      whileInView={{
-        opacity: 1,
-        y: 0,
-      }}
-      viewport={{
-        once: true,
-        amount: 0.2,
-      }}
-      transition={{
-        duration: 0.7,
-        delay: index * 0.15,
-      }}
-      whileHover={{
-        y: -8,
-      }}
-      className="group overflow-hidden rounded-[2rem] bg-[#F7F5F2] transition-shadow duration-300 hover:shadow-xl"
-    >
-      {/* Image */}
-      <div className="relative h-64 overflow-hidden bg-gray-200">
-        <motion.img
-          src={umkm.foto}
-          alt={umkm.nama}
-          className="h-full w-full object-cover transition duration-700 group-hover:scale-110"
-        />
-
-        <div className="absolute left-5 top-5">
-          <span className="rounded-full bg-white/90 px-4 py-2 text-xs font-bold text-[#2D2926] backdrop-blur">
-            {umkm.kategori}
-          </span>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="p-6">
-        <div className="flex items-start justify-between gap-4">
-          <h3 className="text-xl font-black text-[#2D2926]">
-            {umkm.nama}
-          </h3>
-
-          <span className="text-xl text-[#8A6A4A]">
-            ↗
-          </span>
-        </div>
-
-        <p className="mt-3 line-clamp-2 text-sm leading-6 text-gray-500">
-          {umkm.deskripsi}
-        </p>
-
-        <p className="mt-5 text-sm font-bold text-[#8A6A4A]">
-          📍 {umkm.lokasi}
-        </p>
-      </div>
-    </motion.div>
   );
 }

@@ -1,11 +1,79 @@
-import { gasGet } from "@/lib/gas";
+import { supabase } from "@/lib/supabase";
 
-export async function getDashboard(){
+export interface DashboardData {
 
-    const result=
+  total_umkm: number;
 
-    await gasGet("dashboard");
+  total_produk: number;
 
-    return result;
+  total_kategori: number;
+
+}
+
+export async function getDashboard(): Promise<DashboardData> {
+
+  const [
+
+    umkm,
+
+    product,
+
+    category,
+
+  ] = await Promise.all([
+
+    supabase
+
+      .from("umkm")
+
+      .select("*", {
+
+        count: "exact",
+
+        head: true,
+
+      }),
+
+    supabase
+
+      .from("product")
+
+      .select("*", {
+
+        count: "exact",
+
+        head: true,
+
+      }),
+
+    supabase
+
+      .from("category")
+
+      .select("*", {
+
+        count: "exact",
+
+        head: true,
+
+      }),
+
+  ]);
+
+  return {
+
+    total_umkm:
+
+      umkm.count ?? 0,
+
+    total_produk:
+
+      product.count ?? 0,
+
+    total_kategori:
+
+      category.count ?? 0,
+
+  };
 
 }

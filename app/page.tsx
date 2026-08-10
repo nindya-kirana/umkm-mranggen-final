@@ -2,15 +2,17 @@ import { Feature } from "framer-motion";
 import AboutMranggen from "./components/AboutMranggen";
 import HeroBanner from "./components/HeroBanner";
 // import SearchSection from "./components/SearchSection";
-import UMKMSection from "./components/UMKMSection";
-// import FeaturedUMKM from "./components/FeaturedUMKM";
+import AboutSection from "./components/AboutSection";
+import FeaturedUMKM from "./components/FeaturedUMKM";
+import { getFeaturedUMKM } from "@/services/umkm";
 
-export default function Home() {
+export default async function Home() {
+  const umkms = await getFeaturedUMKM(3);
   return (
     <main>
       <HeroBanner />
-      <AboutMranggen />
-      <UMKMSection />
+      <AboutSection />
+      <FeaturedUMKM umkms={umkms} />
     </main>
   );
 }
