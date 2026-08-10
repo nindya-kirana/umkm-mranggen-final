@@ -5,17 +5,12 @@ import { verifyToken } from "@/lib/auth";
 
 export async function GET() {
   try {
-
-    const cookieStore =
-      await cookies();
+    const cookieStore = await cookies();
 
     const token =
-      cookieStore.get(
-        "admin_token"
-      )?.value;
+      cookieStore.get("admin_token")?.value;
 
     if (!token) {
-
       return NextResponse.json(
         {
           authenticated: false,
@@ -24,14 +19,12 @@ export async function GET() {
           status: 401,
         }
       );
-
     }
 
     const payload =
       await verifyToken(token);
 
-    if (!payload) {
-
+    if (!payload || payload.role !== "admin") {
       return NextResponse.json(
         {
           authenticated: false,
@@ -40,22 +33,14 @@ export async function GET() {
           status: 401,
         }
       );
-
     }
 
     return NextResponse.json({
       authenticated: true,
-      admin: {
-        role: payload.role,
-      },
     });
 
   } catch (error) {
-
-    console.error(
-      "ME API ERROR:",
-      error
-    );
+    console.error("ADMIN SESSION ERROR:", error);
 
     return NextResponse.json(
       {

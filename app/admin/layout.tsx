@@ -5,9 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
-
-
-import { isLoggedIn } from "@/utils/auth";
+import Footer from "../components/Footer";
 
 export default function AdminLayout({
   children,
@@ -17,146 +15,157 @@ export default function AdminLayout({
   const router = useRouter();
   const pathname = usePathname();
 
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [checking, setChecking] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] =
+    useState(false);
 
   useEffect(() => {
-    // =========================
-    // LOGIN PAGE
-    // =========================
-
+    // Login tidak perlu auth check
     if (pathname === "/admin/login") {
+      setChecking(false);
       return;
     }
 
-    if (!isLoggedIn()) {
-      router.replace("/admin/login");
+    async function checkAuth() {
+      try {
+        const response = await fetch(
+          "/api/admin/me",
+          {
+            credentials: "include",
+            cache: "no-store",
+          }
+        );
+
+        if (!response.ok) {
+          router.replace("/admin/login");
+          return;
+        }
+      } catch (error) {
+        console.error(
+          "AUTH CHECK ERROR:",
+          error
+        );
+
+        router.replace("/admin/login");
+      } finally {
+        setChecking(false);
+      }
     }
+
+    checkAuth();
   }, [pathname, router]);
 
-  // =========================
+  // =========================================
   // LOGIN PAGE
-  // =========================
+  // =========================================
 
   if (pathname === "/admin/login") {
     return <>{children}</>;
   }
 
-  // =========================
+  // =========================================
+  // CHECKING AUTH
+  // =========================================
+
+  if (checking) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#F7F5F2]">
+        <p className="text-gray-500">
+          Memeriksa autentikasi...
+        </p>
+      </div>
+    );
+  }
+
+  // =========================================
   // ADMIN LAYOUT
-  // =========================
+  // =========================================
 
   return (
     <div className="min-h-screen bg-[#F7F5F2]">
 
-      {/* =========================================
-          MOBILE SIDEBAR OVERLAY
-      ========================================= */}
-
-      {sidebarOpen && (
-        <div
-          className="
-            fixed
-            inset-0
-            z-40
-            bg-black/40
-            backdrop-blur-[2px]
-            lg:hidden
-          "
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* =========================================
-          MOBILE SIDEBAR
-      ========================================= */}
-
-      <aside
-        className={`
-          fixed
-          inset-y-0
-          left-0
-          z-50
-          w-[290px]
-          transform
-          bg-white
-          shadow-2xl
-          transition-transform
-          duration-300
-          ease-out
-          lg:hidden
-
-          ${
-            sidebarOpen
-              ? "translate-x-0"
-              : "-translate-x-full"
-          }
-        `}
-      >
-        <Sidebar
-          mobile
-          onClose={() => setSidebarOpen(false)}
-        />
-      </aside>
-
-      {/* =========================================
-          DESKTOP LAYOUT
-      ========================================= */}
-
-      <div
-        className="
-          grid
-          min-h-screen
-
-          lg:grid-cols-[250px_minmax(0,1fr)]
-        "
-      >
+      <div className="grid min-h-screen grid-cols-1 lg:grid-cols-[250px_minmax(0,1fr)]">
 
         {/* =====================================
-            DESKTOP SIDEBAR
+            SIDEBAR DESKTOP
         ===================================== */}
 
-        <aside
-          className="
-            hidden
-            lg:block
-            lg:sticky
-            lg:top-0
-            lg:h-screen
-            lg:self-start
-          "
-        >
+        <aside className="hidden lg:block">
           <Sidebar />
         </aside>
 
         {/* =====================================
-            CONTENT AREA
+            CONTENT
         ===================================== */}
 
-        <div className="flex min-h-screen min-w-0 flex-col">
+        <div className="min-w-0">
 
           {/* HEADER */}
 
           <Header
-            onMenuClick={() => setSidebarOpen(true)}
+            onMenuClick={() =>
+              setMobileMenuOpen(true)
+            }
           />
 
-          {/* MAIN */}
+          {/* MAIN CONTENT */}
 
-          <main
-            className="
-              flex-1
-              p-5
-              sm:p-6
-              md:p-8
-              lg:p-10
-            "
-          >
+          <main className="min-h-[calc(100vh-76px)] p-5 sm:p-6 lg:p-8">
             {children}
           </main>
 
         </div>
 
       </div>
+
+      {/* =====================================
+          MOBILE SIDEBAR OVERLAY
+      ===================================== */}
+
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+
+          {/* BACKDROP */}
+
+          <button
+            type="button"
+            aria-label="Tutup menu"
+            onClick={() =>
+              setMobileMenuOpen(false)
+            }
+            className="absolute inset-0 bg-black/40"
+          />
+
+          {/* SIDEBAR */}
+
+          <aside
+            className="
+              relative
+              z-10
+              flex
+              h-full
+              w-[280px]
+              flex-col
+              bg-white
+              shadow-2xl
+            "
+          >
+            <Sidebar
+              mobile
+              onClose={() =>
+                setMobileMenuOpen(false)
+              }
+            />
+          </aside>
+
+        </div>
+      )}
+
+      {/* =====================================
+          FOOTER
+      ===================================== */}
+
+      <Footer />
 
     </div>
   );
