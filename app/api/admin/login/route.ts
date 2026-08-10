@@ -6,10 +6,30 @@ import { supabaseServer } from "@/lib/supabase-server";
 
 export async function POST(req: Request) {
   try {
+    // ================================
+    // BODY
+    // ================================
+
     const body = await req.json();
 
-    console.log("=== LOGIN START ===");
-    console.log("EMAIL:", body.email);
+    const email = String(body.email ?? "").trim();
+    const password = String(body.password ?? "");
+
+    if (!email || !password) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Email dan password wajib diisi.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    // ================================
+    // CARI ADMIN
+    // ================================
 
     const {
       data: admin,
@@ -17,23 +37,20 @@ export async function POST(req: Request) {
     } = await supabaseServer
       .from("admin")
       .select("*")
-      .eq("email", body.email)
-      .maybeSingle();
-
-    console.log("=== SUPABASE RESULT ===");
-    console.log("ADMIN FOUND:", !!admin);
-    console.log("SUPABASE ERROR:", error);
+      .eq("email", email)
+      .single();
 
     if (error) {
-      console.error("SUPABASE ERROR CODE:", error.code);
-      console.error("SUPABASE ERROR MESSAGE:", error.message);
-      console.error("SUPABASE ERROR DETAILS:", error.details);
-      console.error("SUPABASE ERROR HINT:", error.hint);
+      console.error(
+        "SUPABASE ADMIN ERROR:",
+        error
+      );
 
       return NextResponse.json(
         {
           success: false,
-          message: "Supabase error.",
+          message:
+            "Gagal mengambil data admin.",
         },
         {
           status: 500,
@@ -42,8 +59,6 @@ export async function POST(req: Request) {
     }
 
     if (!admin) {
-      console.log("ADMIN NOT FOUND");
-
       return NextResponse.json(
         {
           success: false,
@@ -55,42 +70,15 @@ export async function POST(req: Request) {
       );
     }
 
-    console.log("ADMIN PASSWORD EXISTS:", !!admin.password);
-    console.log(
-      "ADMIN PASSWORD TYPE:",
-      typeof admin.password
-    );
+    // ================================
+    // CEK PASSWORD
+    // ================================
 
-    // =========================
-    // CHECK PASSWORD
-    // =========================
-
-    let valid = false;
-
-    try {
-      valid = await bcrypt.compare(
-        body.password,
+    const valid =
+      await bcrypt.compare(
+        password,
         admin.password
       );
-
-      console.log(
-        "PASSWORD VALID:",
-        valid
-      );
-
-    } catch (error) {
-      console.error("BCRYPT ERROR:", error);
-
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Gagal memverifikasi password.",
-        },
-        {
-          status: 500,
-        }
-      );
-    }
 
     if (!valid) {
       return NextResponse.json(
@@ -104,65 +92,57 @@ export async function POST(req: Request) {
       );
     }
 
-    // =========================
-    // CREATE JWT
-    // =========================
+    // ================================
+    // BUAT TOKEN
+    // ================================
 
-    let token: string;
+    const token =
+      await createToken();
 
-    try {
-      token = await createToken();
-
-      console.log(
-        "JWT TOKEN CREATED: true"
-      );
-
-    } catch (error) {
-      console.error("JWT ERROR:", error);
-
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Gagal membuat token.",
-        },
-        {
-          status: 500,
-        }
+    if (!token) {
+      throw new Error(
+        "Token gagal dibuat."
       );
     }
 
-    // =========================
+    // ================================
     // RESPONSE
-    // =========================
+    // ================================
 
-    const response = NextResponse.json({
-      success: true,
-    });
+    const response =
+      NextResponse.json({
+        success: true,
+        message: "Login berhasil.",
+      });
 
     response.cookies.set({
       name: "admin_token",
       value: token,
       httpOnly: true,
-      path: "/",
-      sameSite: "lax",
       secure:
-        process.env.NODE_ENV === "production",
+        process.env.NODE_ENV ===
+        "production",
+      sameSite: "lax",
+      path: "/",
       maxAge: 60 * 60 * 24 * 7,
     });
-
-    console.log("=== LOGIN SUCCESS ===");
 
     return response;
 
   } catch (error) {
 
-    console.error("=== LOGIN FATAL ERROR ===");
-    console.error(error);
+    console.error(
+      "LOGIN API ERROR:",
+      error
+    );
 
     return NextResponse.json(
       {
         success: false,
-        message: "Terjadi kesalahan server.",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Terjadi kesalahan pada server.",
       },
       {
         status: 500,

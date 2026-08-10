@@ -1,10 +1,18 @@
 import { SignJWT, jwtVerify } from "jose";
 
-const secret = new TextEncoder().encode(
-  process.env.JWT_SECRET!
-);
+function getSecret() {
+  const secret = process.env.JWT_SECRET;
+
+  if (!secret) {
+    throw new Error("JWT_SECRET belum dikonfigurasi.");
+  }
+
+  return new TextEncoder().encode(secret);
+}
 
 export async function createToken() {
+  const secret = getSecret();
+
   return await new SignJWT({
     role: "admin",
   })
@@ -18,10 +26,14 @@ export async function createToken() {
 
 export async function verifyToken(token: string) {
   try {
+    const secret = getSecret();
+
     const result = await jwtVerify(token, secret);
 
     return result.payload;
-  } catch {
+  } catch (error) {
+    console.error("JWT VERIFY ERROR:", error);
+
     return null;
   }
 }

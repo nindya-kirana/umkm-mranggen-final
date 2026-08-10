@@ -1,22 +1,32 @@
-export function getAdmin() {
-  return null;
-}
-
-export async function isLoggedIn() {
-
+export async function getAdmin() {
   try {
 
     const response =
-      await fetch("/api/admin/me", {
-        method: "GET",
-        credentials: "include",
-      });
+      await fetch(
+        "/api/admin/me",
+        {
+          method: "GET",
+          credentials: "include",
+          cache: "no-store",
+        }
+      );
 
-    return response.ok;
+    if (!response.ok) {
+      return null;
+    }
+
+    const data =
+      await response.json();
+
+    if (!data.authenticated) {
+      return null;
+    }
+
+    return data.admin;
 
   } catch {
 
-    return false;
+    return null;
 
   }
 }
