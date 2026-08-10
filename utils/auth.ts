@@ -1,31 +1,22 @@
 export function getAdmin() {
-
-  if (typeof window === "undefined") {
-
-    return null;
-
-  }
-
-  const admin = localStorage.getItem("admin");
-
-  if (!admin) {
-
-    return null;
-
-  }
-
-  return JSON.parse(admin);
-
+  return null;
 }
 
-export function isLoggedIn() {
+export async function isLoggedIn() {
 
-  return !!getAdmin();
+  try {
 
-}
+    const response =
+      await fetch("/api/admin/me", {
+        method: "GET",
+        credentials: "include",
+      });
 
-export function logout() {
+    return response.ok;
 
-  localStorage.removeItem("admin");
+  } catch {
 
+    return false;
+
+  }
 }
