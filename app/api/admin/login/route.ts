@@ -6,9 +6,9 @@ import { supabaseServer } from "@/lib/supabase-server";
 
 export async function POST(req: Request) {
   try {
-    // ================================
-    // BACA REQUEST
-    // ================================
+    // =====================================
+    // REQUEST
+    // =====================================
 
     const body = await req.json();
 
@@ -27,9 +27,9 @@ export async function POST(req: Request) {
       );
     }
 
-    // ================================
+    // =====================================
     // CARI ADMIN
-    // ================================
+    // =====================================
 
     const {
       data: admin,
@@ -38,21 +38,40 @@ export async function POST(req: Request) {
       .from("admin")
       .select("*")
       .eq("email", email)
-      .single();
+      .maybeSingle();
+
+    // =====================================
+    // SUPABASE ERROR
+    // =====================================
 
     if (error) {
-      console.error("Supabase admin error:", error);
+      console.error(
+        "========== SUPABASE LOGIN ERROR =========="
+      );
+
+      console.error("CODE:", error.code);
+      console.error("MESSAGE:", error.message);
+      console.error("DETAILS:", error.details);
+      console.error("HINT:", error.hint);
+
+      console.error(
+        "=========================================="
+      );
 
       return NextResponse.json(
         {
           success: false,
-          message: "Gagal mengakses data admin.",
+          message: "Gagal mengambil data admin.",
         },
         {
           status: 500,
         }
       );
     }
+
+    // =====================================
+    // ADMIN TIDAK DITEMUKAN
+    // =====================================
 
     if (!admin) {
       return NextResponse.json(
@@ -66,9 +85,9 @@ export async function POST(req: Request) {
       );
     }
 
-    // ================================
-    // CEK PASSWORD
-    // ================================
+    // =====================================
+    // PASSWORD
+    // =====================================
 
     const valid = await bcrypt.compare(
       password,
@@ -87,15 +106,15 @@ export async function POST(req: Request) {
       );
     }
 
-    // ================================
-    // BUAT TOKEN
-    // ================================
+    // =====================================
+    // TOKEN
+    // =====================================
 
     const token = await createToken();
 
-    // ================================
+    // =====================================
     // RESPONSE
-    // ================================
+    // =====================================
 
     const response = NextResponse.json(
       {
@@ -118,8 +137,18 @@ export async function POST(req: Request) {
     });
 
     return response;
+
   } catch (error) {
-    console.error("LOGIN ERROR:", error);
+
+    console.error(
+      "========== LOGIN SERVER ERROR =========="
+    );
+
+    console.error(error);
+
+    console.error(
+      "========================================"
+    );
 
     return NextResponse.json(
       {
